@@ -17,15 +17,16 @@ public class MulticastPeer{
 		// args give message contents and destination multicast group (e.g. "228.5.6.7")
 		MulticastSocket s =null;
 		//List peers = new List<Peers>();
-
+		
 		try {
 			InetAddress group = InetAddress.getByName("228.5.6.7");
 			Assinatura assinatura = new Assinatura();
 			assinatura.createKeys();
-			PublicKey chave = assinatura.getPubKey();
+			PublicKey chavePublica = assinatura.getPubKey();
 
-			System.out.println(chave);	
-
+			System.out.println(chavePublica);	
+			
+			ReceptorMensagem receptor = new ReceptorMensagem(s, chavePublica);
 
 			// String mensagem = "handshake|" + "ident|" + Base64.getEncoder().encodeToString(chave);
 
