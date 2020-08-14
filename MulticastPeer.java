@@ -23,18 +23,16 @@ public class MulticastPeer{
 			Assinatura assinatura = new Assinatura();
 			assinatura.createKeys();
 			PublicKey chavePublica = assinatura.getPubKey();
-
+			
+			System.out.println("Chave P�blica:");	
 			System.out.println(chavePublica);	
 			
+			String mensagem = TipoMensagem.HANDSHAKE.getCodigo()  + "|ident|" + Base64.getEncoder().encodeToString(chavePublica.getEncoded());
+
+			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), 2, group, 6789);
+			s.send(messageOut);
+
 			ReceptorMensagem receptor = new ReceptorMensagem(s, chavePublica);
-
-			// String mensagem = "handshake|" + "ident|" + Base64.getEncoder().encodeToString(chave);
-
-			// DatagramPacket messageOut = new DatagramPacket(
-			// 		message.getBytes(), 2, group, 6789);
-			//   	s.send(messageOut);
-
-			
 
 			// while(true){
 			// 	System.Out.Println("Digite uma opção: ");
