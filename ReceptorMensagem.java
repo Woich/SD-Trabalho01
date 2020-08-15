@@ -23,7 +23,7 @@ public class ReceptorMensagem extends Thread {
 	InetAddress group;
 	Assinatura assinatura;
 	PublicKey chavePublica;
-	byte[] assinat;
+	String assinat;
 	List<MulticastPeerNode> listaNos;
 	
 	public ReceptorMensagem(InetAddress group, int porta) throws IOException{
@@ -65,19 +65,19 @@ public class ReceptorMensagem extends Thread {
  				mensagem = new String(messageIn.getData());
  				System.out.println("Message Received:" + mensagem);
  				
- 				String[] mensagemParts = mensagem.split("|");
+ 				String[] mensagemParts = mensagem.split(";");
  				TipoMensagem tipoMensagem = TipoMensagem.findByCodigo(Integer.parseInt(mensagemParts[0]));
  				String ident = mensagemParts[1];
  				int portaUnicast = 9999;
- 				assinat = mensagemParts[2].getBytes();
- 				String assinaturaString = assinat.toString();
+ 				assinat = mensagemParts[2];
+ 				
+ 				for(String part:mensagemParts) {
+ 					System.out.println("Part:" + part);
+ 				}
  				
  				if(tipoMensagem == TipoMensagem.HANDSHAKE) {
- 					System.out.println("Bora");
- 					PublicKey pubKey = assinatura.stringToPublicKey(assinaturaString);
- 					System.out.println("pubKey");
+ 					PublicKey pubKey = assinatura.stringToPublicKey(assinat);
  					listaNos.add(new MulticastPeerNode(ident, portaUnicast, pubKey));
- 					System.out.println("Add na lista");
  				}
  			}
 			

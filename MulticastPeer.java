@@ -38,9 +38,7 @@ public class MulticastPeer{
 			System.out.println("Chave Pública:");	
 			System.out.println(chavePublica);	
 			
-			String mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + "|" + ident + "|" + assinatura.publicKeyToString(chavePublica);
-			
-			System.out.println("------------------------------------------------------------------");
+			String mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";" + ident + ";" + assinatura.publicKeyToString(chavePublica);
 			
 			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
 			System.out.println(mensagem.length());
