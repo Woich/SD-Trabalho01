@@ -1,18 +1,19 @@
 
 public enum TipoMensagem {
 	
-	HANDSHAKE(1, "handshake"),
-	MENSAGEM(2, "mensagem");
+	HANDSHAKE(1, "Handshake"),
+	NOTICIA(2, "Noticia"),
+	DENUNCIA(3, "Denuncia");
 	
-	private TipoMensagem(int codigo, String descricao) {
+	private TipoMensagem(Integer codigo, String descricao) {
 		this.codigo = codigo;
 		this.descricao = descricao;	
 	}
 	
-	int codigo;
+	Integer codigo;
 	String descricao;
 	
-	public int getCodigo() {
+	public Integer getCodigo() {
 		return codigo;
 	}
 	
@@ -20,7 +21,7 @@ public enum TipoMensagem {
 		return descricao;
 	}
 	
-	public static TipoMensagem findByCodigo(int codigo) {
+	public static TipoMensagem findByCodigo(Integer codigo) {
 		for(TipoMensagem tm : values()) {
 			if(tm.getCodigo() == codigo) {
 				return tm;

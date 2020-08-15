@@ -7,32 +7,46 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
 
 import javax.sound.sampled.SourceDataLine;
-
+import java.util.UUID;
 import java.io.*;
+
 public class MulticastPeer{
     public static void main(String args[]){ 
 		// args give message contents and destination multicast group (e.g. "228.5.6.7")
 		MulticastSocket s =null;
-		//List peers = new List<Peers>();
 		
 		try {
+			int porta = 6789;
+			
+			//Gera uma id aleatório para o nó 
+			UUID uuid = UUID.randomUUID();
+			String ident = uuid.toString();
+			
+			
 			InetAddress group = InetAddress.getByName("228.5.6.7");
+			s = new MulticastSocket(porta);
+			s.joinGroup(group);
 			Assinatura assinatura = new Assinatura();
 			assinatura.createKeys();
 			PublicKey chavePublica = assinatura.getPubKey();
+			List<MulticastPeerNode> listaNos = new ArrayList<MulticastPeerNode>();
 			
 			System.out.println("Chave Pública:");	
 			System.out.println(chavePublica);	
 			
-			String mensagem = TipoMensagem.HANDSHAKE.getCodigo()  + "|ident|" + Base64.getEncoder().encodeToString(chavePublica.getEncoded());
-
-			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), 2, group, 6789);
+			String mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + "|" + ident + "|" + assinatura.publicKeyToString(chavePublica);
+			
+			System.out.println("------------------------------------------------------------------");
+			
+			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+			System.out.println(mensagem.length());
 			s.send(messageOut);
 
-			ReceptorMensagem receptor = new ReceptorMensagem(s, chavePublica);
+			ReceptorMensagem receptor = new ReceptorMensagem(group, porta);
 
 			// while(true){
 			// 	System.Out.Println("Digite uma opÃ§Ã£o: ");
@@ -96,6 +110,7 @@ public class MulticastPeer{
 		//}catch (SocketException e){System.out.println("Socket: " + e.getMessage());
 		}catch (IOException e){System.out.println("IO: " + e.getMessage());
 		}catch (NoSuchAlgorithmException e){System.out.println("IO: " + e.getMessage());
+		}catch (InvalidKeySpecException e){System.out.println("InvalidKeySpecException: " + e.getMessage());
 		}finally {if(s != null) s.close();}
 	}		      	
 	
