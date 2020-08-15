@@ -71,9 +71,7 @@ public class ReceptorMensagem extends Thread {
  				int portaUnicast = 9999;
  				assinat = mensagemParts[2];
  				
- 				for(String part:mensagemParts) {
- 					System.out.println("Part:" + part);
- 				}
+ 				System.out.println(assinat);
  				
  				if(tipoMensagem == TipoMensagem.HANDSHAKE) {
  					PublicKey pubKey = assinatura.stringToPublicKey(assinat);

@@ -29,7 +29,7 @@ public class Assinatura {
       }
 
      public PublicKey stringToPublicKey(String string) throws NoSuchAlgorithmException, InvalidKeySpecException {
-            byte[] publicBytes = Base64.getDecoder().decode(string);
+            byte[] publicBytes = Base64.getMimeDecoder().decode(string);
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
             KeyFactory keyFactory = KeyFactory.getInstance("DSA");
             PublicKey pubKey = keyFactory.generatePublic(keySpec);
