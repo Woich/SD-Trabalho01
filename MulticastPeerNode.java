@@ -11,6 +11,7 @@ public class MulticastPeerNode {
 		this.ident = ident;
 		this.portaUnicast = portaUnicast;
 		this.chavePublica = chavePublica;
+		this.denuncias = 0;
 	}
 	
 	public void addDenuncia() {

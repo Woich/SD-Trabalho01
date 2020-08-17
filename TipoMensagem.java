@@ -3,7 +3,8 @@ public enum TipoMensagem {
 	
 	HANDSHAKE(1, "Handshake"),
 	NOTICIA(2, "Noticia"),
-	DENUNCIA(3, "Denuncia");
+	DENUNCIA(3, "Denuncia"),
+	GOODBYE(4, "Goodbye");
 	
 	private TipoMensagem(Integer codigo, String descricao) {
 		this.codigo = codigo;

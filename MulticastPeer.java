@@ -15,101 +15,75 @@ import java.util.UUID;
 import java.io.*;
 
 public class MulticastPeer{
-    public static void main(String args[]){ 
+	
+	public static void main(String args[]){ 
 		// args give message contents and destination multicast group (e.g. "228.5.6.7")
 		MulticastSocket s =null;
 		
 		try {
-			int porta = 6789;
+			int escolha = 0;
+			int portaMulticast = 6789;
+			int portaUnicast = 9876;
 			
 			//Gera uma id aleatório para o nó 
 			UUID uuid = UUID.randomUUID();
 			String ident = uuid.toString();
 			
-			
+			//Declaração do grupo e do socket multicast sendo inicializado no grupo
 			InetAddress group = InetAddress.getByName("228.5.6.7");
-			s = new MulticastSocket(porta);
+			s = new MulticastSocket(portaMulticast);
 			s.joinGroup(group);
+			
+			//Gera as assinaturas
 			Assinatura assinatura = new Assinatura();
 			assinatura.createKeys();
 			PublicKey chavePublica = assinatura.getPubKey();
-			List<MulticastPeerNode> listaNos = new ArrayList<MulticastPeerNode>();
 			
 			System.out.println("Chave Pública:");	
 			System.out.println(chavePublica);	
 			
-			String mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";" + ident + ";" + assinatura.publicKeyToString(chavePublica);
+			//Inicializa o emissor de mensagens
+			EmissorMensagem emissorMensagem = new EmissorMensagem(ident, portaMulticast, portaUnicast,group, assinatura, chavePublica);
+			//Envia via multicast um handshake para informar que entrou no grupo
+			emissorMensagem.enviaHandskake(true);
 			
-			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
-			System.out.println(mensagem.length());
-			s.send(messageOut);
-
-			ReceptorMensagem receptor = new ReceptorMensagem(group, porta);
-
-			// while(true){
-			// 	System.Out.Println("Digite uma opÃ§Ã£o: ");
-			//  	System.Out.Println("0 - Ler mensagens");
-			//  	System.Out.Println("1 - Digitar uma notÃ­cia");
-			//  	System.Out.Println("2 - Denunciar uma fake news");
-			//  	System.Out.Println("3 - Sair");
-			// 	DatagramPacket messageOut = new DatagramPacket(
-			// 		message.getBytes(), 2, group, 6789);
-			//   	s.send(messageOut);
-			// 	byte[] buffer = new byte[1000];
-			// 	for(int i=0; i< 4;i++) {		// get messages from others in group
-			// 		DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
-			// 		s.receive(messageIn);
-			//    	    System.out.println("Received:" + new String(messageIn.getData()));	 
-			//     }
-			//     break;  
-			// }
-			// int escolha = 10;
+			//Inicializa o receptor de mensagens
+			ReceptorMensagem receptor = new ReceptorMensagem(emissorMensagem, ident, group, portaMulticast);
 			
-			// while(escolha != 3){
-			// 	System.Out.Println("Digite uma opÃ§Ã£o: ");
-			// 	System.Out.Println("0 - Ler mensagens");
-			// 	System.Out.Println("1 - Digitar uma notÃ­cia");
-			// 	System.Out.Println("2 - Denunciar uma fake news");
-			// 	System.Out.Println("3 - Sair");
-
-				
-			// 	Scanner scanner = new Scanner();
-			// 	escolha = scanner.scan().nextInt();
-
-			// 	switch(escolha)
-			// 	{
-			// 		case 0:
-			// 			byte[] buffer = new byte[1000];
- 			// 			for(int i=0; i< 3;i++) {		// get messages from others in group
- 			// 				DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
- 			// 				s.receive(messageIn);
-			// 				System.out.println("Received:" + new String(messageIn.getData()));	 
-			// 			}
-			// 			break;  
-
-			// 		case 1:
-			// 			System.Out.Println("3 - Sair");
-			// 			DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
-			// 			s.send(messageOut);
-			// 			break;	
-
-			// 		case 2: 
-
-			// 		case 3:
-			// 			s.leaveGroup(group);
-			// 			break;
-
-			// 		default:
-			// 			System.Out.Println("Escolha invÃ¡lida!");
-			// 			break;
-			// 	}	
-			//}
+			
+			
+			 while(escolha != -1){
+				 System.out.println("Digite uma opção: ");
+				 System.out.println("1 - Digitar uma notícia");
+				 System.out.println("2 - Ler notícias recebidas");
+				 System.out.println("3 - Listar nós");
+				 System.out.println("-1 - Sair");
+				 
+				 Scanner scanner = new Scanner(System.in);
+				 escolha = scanner.nextInt();
+				 
+				 switch(escolha) {
+				 	case 1: 
+				 		emissorMensagem.enviaNoticia(); 
+				 		break;
+				 	case 2:
+				 		receptor.listarNoticias(); 
+				 		break;
+				 	case 3:
+				 		receptor.listarNos(); 
+				 		break;
+				 	case -1:
+						s.leaveGroup(group);
+						receptor.stop();
+						break;
+					default:
+						break;
+				 }
+			 }
 			 											
-		//}catch (SocketException e){System.out.println("Socket: " + e.getMessage());
 		}catch (IOException e){System.out.println("IO: " + e.getMessage());
 		}catch (NoSuchAlgorithmException e){System.out.println("IO: " + e.getMessage());
-		}catch (InvalidKeySpecException e){System.out.println("InvalidKeySpecException: " + e.getMessage());
 		}finally {if(s != null) s.close();}
-	}		      	
+	}
 	
 }

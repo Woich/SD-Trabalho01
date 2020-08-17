@@ -15,14 +15,134 @@ import java.util.Base64;
 import java.util.List;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
+import java.util.Scanner;
 
 public class EmissorMensagem {
 	
-	MulticastSocket socket;
-	InetAddress group;
-	Assinatura assinatura;
-	PublicKey chavePublica;
-	byte[] assinat;
-	List<MulticastPeerNode> listaNos;
+	private String ident;
+	private int portaMulticast;
+	private int portaUnicast;
+	private MulticastSocket socket;
+	private InetAddress group;
+	private Assinatura assinatura;
+	private PublicKey chavePublica;
+	
+	DatagramPacket messageOut;
+	
+	public EmissorMensagem(String ident, int portaMulticast, int portaUnicast,
+			InetAddress group, Assinatura assinatura, PublicKey chavePublica)  throws IOException{
+		//Declara as informações do emissor com base as informações do nó a qual ele pertence
+		this.ident = ident;
+		this.portaMulticast = portaMulticast;
+		this.portaUnicast = portaUnicast;
+		this.group = group;
+		this.assinatura = assinatura;
+		this.chavePublica = chavePublica;
+		
+		this.socket = new MulticastSocket(portaMulticast);
+		this.socket.joinGroup(group);
+	}
+    
+	public void enviaHandskake(boolean novoNode) {
+		
+		try {
+			
+			String mensagem = "";
+			//Set para tipo da mensagem como 1(handshake) e a identidade do nó a qual faz parte;
+			mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";";
+			mensagem += ident + ";";
+			
+			//Set da porta unicast para caso seja necessário enviar as informações de entrada;
+			mensagem += portaUnicast + ";";
+			
+			if(novoNode) {
+				//Caso seja um novo nó entrando no grupo multicast
+				mensagem += "true;";
+			}else {
+				//Caso seja um nó que já exista no grupo multicast;
+				mensagem += "false;";
+			}
+			
+			//Adiciona o chave pública do nó para validação;
+			mensagem += assinatura.publicKeyToString(chavePublica);
+			
+			//Gera o datagrama e envia para o grupo;
+			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+			socket.send(messageOut);
+			
+		}catch (IOException e){System.out.println("enviaHandskake - IOException: " + e.getMessage());
+		}catch (NoSuchAlgorithmException e){System.out.println("enviaHandskake - NoSuchAlgorithmException: " + e.getMessage());
+		}catch (InvalidKeySpecException e){System.out.println("enviaHandskake - InvalidKeySpecException: " + e.getMessage());
+		}finally {if(socket != null) socket.close();}
+		
+	}
+	
+	public void enviaNoticia() {
+		
+		try {
+			
+			//Abre o socket para enviar a notícia
+			this.socket = new MulticastSocket(portaMulticast);
+			this.socket.joinGroup(group);
+			
+			String mensagem = "";
+			
+			//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
+			mensagem = TipoMensagem.NOTICIA.getCodigo().toString()  + ";";
+			mensagem += ident + ";";
+			
+			//Obtem qual é a notícia;
+			System.out.println("Escreva a noticia: \n");
+			Scanner leitor = new Scanner(System.in);
+			
+			String noticia = leitor.nextLine();
+			
+			mensagem += noticia + ";";
+			
+			//Assina a notícia;
+			mensagem += assinatura.geraAssinatura(mensagem);
+			
+			//Gera o datagrama e envia a notícia para o grupo multicast;
+			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+			socket.send(messageOut);
+			
+		}catch (IOException e){System.out.println("enviaNoticia - IOException: " + e.getMessage());
+		}catch (NoSuchAlgorithmException e){System.out.println("enviaNoticia - NoSuchAlgorithmException: " + e.getMessage());
+		}catch (InvalidKeyException e){System.out.println("enviaNoticia - InvalidKeyException: " + e.getMessage());
+		}catch (SignatureException e){System.out.println("enviaNoticia - SignatureException: " + e.getMessage());
+		}finally {if(socket != null) socket.close();}
+		
+	}
+	
+	public void enviaDenuncia(String identOrigem) {
+		
+		try {
+					
+					//Abre o socket para enviar a notícia
+					this.socket = new MulticastSocket(portaMulticast);
+					this.socket.joinGroup(group);
+					
+					String mensagem = "";
+					
+					//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
+					mensagem = TipoMensagem.DENUNCIA.getCodigo().toString()  + ";";
+					mensagem += ident + ";";
+					
+					//Assina a notícia;
+					mensagem += assinatura.geraAssinatura(mensagem);
+					
+					//Gera o datagrama e envia a notícia para o grupo multicast;
+					DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+					socket.send(messageOut);
+					
+				}catch (IOException e){System.out.println("enviaNoticia - IOException: " + e.getMessage());
+				}catch (NoSuchAlgorithmException e){System.out.println("enviaNoticia - NoSuchAlgorithmException: " + e.getMessage());
+				}catch (InvalidKeyException e){System.out.println("enviaNoticia - InvalidKeyException: " + e.getMessage());
+				}catch (SignatureException e){System.out.println("enviaNoticia - SignatureException: " + e.getMessage());
+				}finally {if(socket != null) socket.close();}
+		
+	}
+	
+	public void enviaGoodbye() {}
 	
 }
