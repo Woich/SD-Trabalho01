@@ -13,6 +13,7 @@ import java.util.Base64;
 import javax.sound.sampled.SourceDataLine;
 import java.util.UUID;
 import java.io.*;
+import java.util.Random;
 
 public class MulticastPeer{
 	
@@ -23,8 +24,12 @@ public class MulticastPeer{
 		try {
 			int escolha = 0;
 			int portaMulticast = 6789;
-			int portaUnicast = 9876;
 			
+			//Gera lista de números de 1024  até 9999
+			Numeros listaPortas = new Numeros(1024, 9999);
+			//Obtem um número aleatório da lista para ser a porta unicast
+			int portaUnicast = listaPortas.sortear();
+			System.out.println("Porta Unicast: " + portaUnicast);
 			//Gera uma id aleatório para o nó 
 			UUID uuid = UUID.randomUUID();
 			String ident = uuid.toString();
@@ -39,25 +44,26 @@ public class MulticastPeer{
 			assinatura.createKeys();
 			PublicKey chavePublica = assinatura.getPubKey();
 			
-			System.out.println("Chave Pública:");	
-			System.out.println(chavePublica);	
+			/*System.out.println("Chave Pública:");	
+			System.out.println(chavePublica);	*/
 			
 			//Inicializa o emissor de mensagens
 			EmissorMensagem emissorMensagem = new EmissorMensagem(ident, portaMulticast, portaUnicast,group, assinatura, chavePublica);
+			
 			//Envia via multicast um handshake para informar que entrou no grupo
-			emissorMensagem.enviaHandskake(true);
+			emissorMensagem.enviaHandskake(true, 0);
 			
 			//Inicializa o receptor de mensagens
-			ReceptorMensagem receptor = new ReceptorMensagem(emissorMensagem, ident, group, portaMulticast);
+			ReceptorMensagem receptor = new ReceptorMensagem(emissorMensagem, portaUnicast, ident, group, portaMulticast);
 			
 			
 			
-			 while(escolha != -1){
+			 while(escolha != 10){
 				 System.out.println("Digite uma opção: ");
 				 System.out.println("1 - Digitar uma notícia");
 				 System.out.println("2 - Ler notícias recebidas");
 				 System.out.println("3 - Listar nós");
-				 System.out.println("-1 - Sair");
+				 System.out.println("10 - Sair");
 				 
 				 Scanner scanner = new Scanner(System.in);
 				 escolha = scanner.nextInt();
@@ -72,8 +78,9 @@ public class MulticastPeer{
 				 	case 3:
 				 		receptor.listarNos(); 
 				 		break;
-				 	case -1:
+				 	case 10:
 						s.leaveGroup(group);
+						receptor.paraEscuta();
 						receptor.stop();
 						break;
 					default:
@@ -81,8 +88,9 @@ public class MulticastPeer{
 				 }
 			 }
 			 											
-		}catch (IOException e){System.out.println("IO: " + e.getMessage());
-		}catch (NoSuchAlgorithmException e){System.out.println("IO: " + e.getMessage());
+		}catch (IOException e){System.out.println("Multicastpeer - IOException: " + e.getMessage());
+		}catch (NoSuchAlgorithmException e){System.out.println("Multicastpeer - NoSuchAlgorithmException: " + e.getMessage());
+		}catch (IllegalStateException e){System.out.println("Multicastpeer - IllegalStateException: " + e.getMessage());
 		}finally {if(s != null) s.close();}
 	}
 	

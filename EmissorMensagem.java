@@ -16,6 +16,8 @@ import java.util.List;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 import java.util.Scanner;
+import java.nio.charset.StandardCharsets;
+import java.net.DatagramSocket;
 
 public class EmissorMensagem {
 	
@@ -43,7 +45,7 @@ public class EmissorMensagem {
 		this.socket.joinGroup(group);
 	}
     
-	public void enviaHandskake(boolean novoNode) {
+	public void enviaHandskake(boolean novoNode, int portaUnicastEnvio) {
 		
 		try {
 			
@@ -66,13 +68,24 @@ public class EmissorMensagem {
 			//Adiciona o chave pública do nó para validação;
 			mensagem += assinatura.publicKeyToString(chavePublica);
 			
-			//Gera o datagrama e envia para o grupo;
-			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
-			socket.send(messageOut);
+			if(novoNode) {
+				//Gera o datagrama e envia para o grupo;
+				DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+				socket.send(messageOut);
+			}else {
+				//Faz o envio por unicast do handshake
+				//Abre o socket
+				DatagramSocket dataSocket = new DatagramSocket();
+				//Gera o datagrama a ser enviado
+				DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, portaUnicastEnvio);
+				dataSocket.send(messageOut);
+				dataSocket.close();
+			}
 			
 		}catch (IOException e){System.out.println("enviaHandskake - IOException: " + e.getMessage());
 		}catch (NoSuchAlgorithmException e){System.out.println("enviaHandskake - NoSuchAlgorithmException: " + e.getMessage());
 		}catch (InvalidKeySpecException e){System.out.println("enviaHandskake - InvalidKeySpecException: " + e.getMessage());
+		}catch (Exception e){System.out.println("enviaHandskake - Exception: " + e.getMessage());
 		}finally {if(socket != null) socket.close();}
 		
 	}
@@ -100,7 +113,7 @@ public class EmissorMensagem {
 			mensagem += noticia + ";";
 			
 			//Assina a notícia;
-			mensagem += assinatura.geraAssinatura(mensagem);
+			mensagem += new String(assinatura.geraAssinatura(mensagem), StandardCharsets.UTF_8);
 			
 			//Gera o datagrama e envia a notícia para o grupo multicast;
 			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);

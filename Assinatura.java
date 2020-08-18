@@ -58,7 +58,7 @@ public class Assinatura {
 
      public byte[] geraAssinatura(String mensagem) throws NoSuchAlgorithmException,
      InvalidKeyException, SignatureException {
-           Signature sig = Signature.getInstance("DSA");
+         Signature sig = Signature.getInstance("DSA");
          //Inicializando Obj Signature com a Chave Privada
          sig.initSign(this.priKey);
 

@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
+import java.lang.ClassNotFoundException;
+import java.net.DatagramSocket;
 
 
 public class ReceptorMensagem extends Thread {
@@ -30,10 +32,13 @@ public class ReceptorMensagem extends Thread {
 	private List<MulticastPeerNode> listaNos = new ArrayList<MulticastPeerNode>();
 	private List<Noticia> listaNoticias = new ArrayList<Noticia>();
 	private boolean isOuvindo;
+	private DatagramSocket datagramSocket;
+	private int portaUnicastSelf;
 	
-	public ReceptorMensagem(EmissorMensagem emissor, String selfIdent,InetAddress group, int porta) throws IOException{
+	public ReceptorMensagem(EmissorMensagem emissor, int portaUnicastSelf, String selfIdent,InetAddress group, int porta) throws IOException{
 		//Declara as informações do receptor com base as informações do nó a qual ele pertence
 		this.emissor = emissor;
+		this.portaUnicastSelf = portaUnicastSelf;
 		this.socket = new MulticastSocket(porta);
 		this.assinatura = new Assinatura();
 		this.group = group;
@@ -156,12 +161,16 @@ public class ReceptorMensagem extends Thread {
 			byte[] buffer = new byte[1000];
 			
 			while(isOuvindo) {		// get messages from others in group
+				
+				escutaUnicast();
+				
 				String mensagem = "";
 				
 				//Recebe a mensagem e transfora ele em string
 				DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
- 				this.socket.receive(messageIn);
- 				mensagem = new String(messageIn.getData());
+				
+				this.socket.receive(messageIn);
+	 			mensagem = new String(messageIn.getData());
  				
  				System.out.println("Message Received:" + mensagem);
  				
@@ -186,6 +195,11 @@ public class ReceptorMensagem extends Thread {
  	 					PublicKey pubKey = assinatura.stringToPublicKey(pubKeyString); //Chave pública como PublicKey
  	 					addMulticastPeerNode(ident, portaUnicast, pubKey);//Add o novo nó na lista de nós do emissor (usado para as denuncias)
  	 					
+ 	 					if(ehNovo) {
+ 	 						//Envia via unicast o handshake em caso de ser um novo nó no grupo
+ 	 	 					emissor. enviaHandskake(false, portaUnicast.intValue());
+ 	 					}
+ 	 					
  	 				}else if(tipoMensagem == TipoMensagem.NOTICIA) {
  	 					//Caso a mensagem seja uma noticia nova que chegou
 
@@ -200,15 +214,15 @@ public class ReceptorMensagem extends Thread {
  	 					//Obtem a chave do suposto nó ao qual ela faz parte
  	 					PublicKey pubKey = obterPubKeyById(ident);
  	 					
- 	 					listaNoticias.add(noticia);
+ 	 					//listaNoticias.add(noticia);
  	 					
  	 					//Caso tenha encontrado o nó
- 	 					/*if(pubKey != null) {
+ 	 					if(pubKey != null) {
  	 						//Caso a assinatura esteja correta adiciona a notícia na lista de notícias;
  	 						if(validaAssiantura(pubKey, mensagem, assinaturaNoticia)) {
  	 							listaNoticias.add(noticia);
  	 						}
- 	 					}*/
+ 	 					}
  	 				}
  					
  				}
@@ -219,4 +233,29 @@ public class ReceptorMensagem extends Thread {
 		}catch (InvalidKeySpecException e){System.out.println("ReceptorMensagem - InvalidKeySpecException: " + e.getMessage());
 		}finally {System.out.println("ReceptorMensagem - Receptor Fechado!");}
 	}
+	
+	public void escutaUnicast() {
+		try{
+			//Inicializa buffer do unicast
+			byte[] bufferUnicast = new byte[1000];
+			
+			//Abre conexão unicast
+			this.datagramSocket = new DatagramSocket(this.portaUnicastSelf);
+			//Recebe mensagem via unicast
+			DatagramPacket messageIn = new DatagramPacket(bufferUnicast, bufferUnicast.length);
+			datagramSocket.setSoTimeout(10000);//Add timeout de 10 s
+			datagramSocket.receive(messageIn);
+			datagramSocket.setSoTimeout(0);//Reinicia timeou
+			System.out.println("Escutei:"+messageIn.getData());
+			
+			//Fecha conexão
+			datagramSocket.close();
+		}catch (Exception e){System.out.println("escutaUnicast - Exception: " + e.getMessage());
+		}finally {System.out.println("escutaUnicast - Receptor Fechado!");}
+	}
+	
+	public void paraEscuta() {
+		this.isOuvindo = false;
+	}
+	
 }
