@@ -38,7 +38,6 @@ public class ControleNos {
 			    			System.out.println("Nó: " + node.getIdent());
 			    			System.out.println("Denuncias: " + node.getDenuncias());
 			    			System.out.println("");
-			    			System.out.println("---------------------------------------------------------------------------");
 			    		}
 			    		
 			    	}

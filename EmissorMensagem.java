@@ -57,12 +57,12 @@ public class EmissorMensagem {
 			
 			try {
 				while(true) {
-					//Fica escutando na porta unicast
+					//Ao enviar um handshake fica espereando um retorno e, caso depois de 1 segundo, não exista o retorno
+					//a função lança uma excessão de timeout e encerra a função
 					DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);;
 					socket.setSoTimeout(1000);
 					socket.receive(messageIn);
 					parseMensagem(messageIn);
-					System.out.println("enviaHandskake - Escutei:" + new String(messageIn.getData()));
 				}
 			}catch (Exception e) {
 				System.out.println("enviaHandskake - Exception:" + e.getMessage());

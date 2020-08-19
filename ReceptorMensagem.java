@@ -82,10 +82,10 @@ public class ReceptorMensagem extends Thread {
     	if(!listaNoticias.isEmpty()) {
     		
     		for(Noticia noticia : listaNoticias) {
-    			
+    			System.out.println("---------------------------------------------------------------------------");
     			System.out.println("Notícia: " + noticia.getNoticia());
     			System.out.println("Origem: " + noticia.getIdentOrigem());
-    			System.out.println("");
+    			System.out.println("---------------------------------------------------------------------------");
     			System.out.println("O que deseja fazer?");
     			System.out.println("0 - Próxima Notícia");
     			System.out.println("1 - Denunciar");
@@ -96,6 +96,7 @@ public class ReceptorMensagem extends Thread {
     			if(acao == 1) {
     				controleNos.disparaDenuncia(noticia.getIdentOrigem());
     			}
+    			
     		}
     		
     		System.out.println("Você chegou no final da lista");
@@ -143,12 +144,14 @@ public class ReceptorMensagem extends Thread {
  	 					controleNos.addMulticastPeerNode(ident, pubKey);//Add o novo nó na lista de nós do emissor (usado para as denuncias)
  	 					
  	 					if(ehNovo.booleanValue()) {
+ 	 						//Obtem endereço e porta da mensagem recebida
  	 						InetAddress address = messageIn.getAddress();
  	 						int portUni  = messageIn.getPort();
  	 						
+ 	 						//Constroi uma mensagem de handshake que não requisite uma de volta
  	 						String messageBack = emissor.builMensagemHandshake(false);
- 	 						System.out.println("ReceptorMensagem - Mensagem:" + messageBack);
  	 						
+ 	 						//Envia a mensagem
  	 						DatagramPacket messageOut = new DatagramPacket(messageBack.getBytes(), messageBack.length(), address, portUni);
  	 						socket.send(messageOut);
  	 						
