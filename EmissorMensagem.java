@@ -98,14 +98,13 @@ public class EmissorMensagem {
 			System.out.println("Escreva a noticia: \n");
 			Scanner leitor = new Scanner(System.in);
 			
-			String noticia = leitor.next();
-			
-			mensagem += Base64.getEncoder().encodeToString(assinatura.geraAssinatura(noticia)) + ";" ;
-
-			mensagem += noticia + ";";
+			String noticia = leitor.nextLine();
 			
 			//Assina a notícia;
+			mensagem += Base64.getEncoder().encodeToString(assinatura.geraAssinatura(noticia)) + ";" ;
 			
+			//Adiciona a noticia escrita pelo usuário na mensagem
+			mensagem += noticia + ";";
 			
 			//Gera o datagrama e envia a notícia para o grupo multicast;
 			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
