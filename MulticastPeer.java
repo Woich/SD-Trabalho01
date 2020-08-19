@@ -18,23 +18,22 @@ import java.util.Random;
 public class MulticastPeer{
 	
 	public static void main(String args[]){ 
-		// args give message contents and destination multicast group (e.g. "228.5.6.7")
 		MulticastSocket s =null;
 		
 		try {
 			int escolha = 0;
 			int portaMulticast = 6789;
 			
-			//Gera lista de números de 1024  até 9999
+			//Gera lista de nï¿½meros de 1024  atï¿½ 9999
 			Numeros listaPortas = new Numeros(1024, 9999);
-			//Obtem um número aleatório da lista para ser a porta unicast
+			//Obtem um nï¿½mero aleatï¿½rio da lista para ser a porta unicast
 			int portaUnicast = listaPortas.sortear();
 			System.out.println("Porta Unicast: " + portaUnicast);
-			//Gera uma id aleatório para o nó 
+			//Gera uma id aleatï¿½rio para o nï¿½ 
 			UUID uuid = UUID.randomUUID();
 			String ident = uuid.toString();
 			
-			//Declaração do grupo e do socket multicast sendo inicializado no grupo
+			//Declaraï¿½ï¿½o do grupo e do socket multicast sendo inicializado no grupo
 			InetAddress group = InetAddress.getByName("228.5.6.7");
 			s = new MulticastSocket(portaMulticast);
 			s.joinGroup(group);
@@ -44,7 +43,7 @@ public class MulticastPeer{
 			assinatura.createKeys();
 			PublicKey chavePublica = assinatura.getPubKey();
 			
-			/*System.out.println("Chave Pública:");	
+			/*System.out.println("Chave Pï¿½blica:");	
 			System.out.println(chavePublica);	*/
 			
 			//Inicializa o emissor de mensagens
@@ -59,10 +58,10 @@ public class MulticastPeer{
 			
 			
 			 while(escolha != 10){
-				 System.out.println("Digite uma opção: ");
-				 System.out.println("1 - Digitar uma notícia");
-				 System.out.println("2 - Ler notícias recebidas");
-				 System.out.println("3 - Listar nós");
+				 System.out.println("Digite uma opï¿½ï¿½o: ");
+				 System.out.println("1 - Digitar uma notï¿½cia");
+				 System.out.println("2 - Ler notï¿½cias recebidas");
+				 System.out.println("3 - Listar nï¿½s");
 				 System.out.println("10 - Sair");
 				 
 				 Scanner scanner = new Scanner(System.in);

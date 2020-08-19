@@ -33,7 +33,7 @@ public class EmissorMensagem {
 	
 	public EmissorMensagem(String ident, int portaMulticast, int portaUnicast,
 			InetAddress group, Assinatura assinatura, PublicKey chavePublica)  throws IOException{
-		//Declara as informações do emissor com base as informações do nó a qual ele pertence
+		//Declara as informaï¿½ï¿½es do emissor com base as informaï¿½ï¿½es do nï¿½ a qual ele pertence
 		this.ident = ident;
 		this.portaMulticast = portaMulticast;
 		this.portaUnicast = portaUnicast;
@@ -50,22 +50,22 @@ public class EmissorMensagem {
 		try {
 			
 			String mensagem = "";
-			//Set para tipo da mensagem como 1(handshake) e a identidade do nó a qual faz parte;
+			//Set para tipo da mensagem como 1(handshake) e a identidade do nï¿½ a qual faz parte;
 			mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";";
 			mensagem += ident + ";";
 			
-			//Set da porta unicast para caso seja necessário enviar as informações de entrada;
+			//Set da porta unicast para caso seja necessï¿½rio enviar as informaï¿½ï¿½es de entrada;
 			mensagem += portaUnicast + ";";
 			
 			if(novoNode) {
-				//Caso seja um novo nó entrando no grupo multicast
+				//Caso seja um novo nï¿½ entrando no grupo multicast
 				mensagem += "true;";
 			}else {
-				//Caso seja um nó que já exista no grupo multicast;
+				//Caso seja um nï¿½ que jï¿½ exista no grupo multicast;
 				mensagem += "false;";
 			}
 			
-			//Adiciona o chave pública do nó para validação;
+			//Adiciona o chave pï¿½blica do nï¿½ para validaï¿½ï¿½o;
 			mensagem += assinatura.publicKeyToString(chavePublica);
 			
 			if(novoNode) {
@@ -94,28 +94,30 @@ public class EmissorMensagem {
 		
 		try {
 			
-			//Abre o socket para enviar a notícia
+			//Abre o socket para enviar a notï¿½cia
 			this.socket = new MulticastSocket(portaMulticast);
 			this.socket.joinGroup(group);
 			
 			String mensagem = "";
 			
-			//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
+			//Set para tipo da mensagem como 2(notï¿½cia) e a identidade do nï¿½ a qual faz parte;
 			mensagem = TipoMensagem.NOTICIA.getCodigo().toString()  + ";";
 			mensagem += ident + ";";
 			
-			//Obtem qual é a notícia;
+			//Obtem qual ï¿½ a notï¿½cia;
 			System.out.println("Escreva a noticia: \n");
 			Scanner leitor = new Scanner(System.in);
 			
-			String noticia = leitor.nextLine();
+			String noticia = leitor.next();
 			
+			mensagem += Base64.getEncoder().encodeToString(assinatura.geraAssinatura(noticia)) + ";" ;
+
 			mensagem += noticia + ";";
 			
-			//Assina a notícia;
-			mensagem += new String(assinatura.geraAssinatura(mensagem), StandardCharsets.UTF_8);
+			//Assina a notï¿½cia;
 			
-			//Gera o datagrama e envia a notícia para o grupo multicast;
+			
+			//Gera o datagrama e envia a notï¿½cia para o grupo multicast;
 			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
 			socket.send(messageOut);
 			
@@ -131,20 +133,20 @@ public class EmissorMensagem {
 		
 		try {
 					
-					//Abre o socket para enviar a notícia
+					//Abre o socket para enviar a notï¿½cia
 					this.socket = new MulticastSocket(portaMulticast);
 					this.socket.joinGroup(group);
 					
 					String mensagem = "";
 					
-					//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
+					//Set para tipo da mensagem como 2(notï¿½cia) e a identidade do nï¿½ a qual faz parte;
 					mensagem = TipoMensagem.DENUNCIA.getCodigo().toString()  + ";";
 					mensagem += ident + ";";
 					
-					//Assina a notícia;
+					//Assina a notï¿½cia;
 					mensagem += assinatura.geraAssinatura(mensagem);
 					
-					//Gera o datagrama e envia a notícia para o grupo multicast;
+					//Gera o datagrama e envia a notï¿½cia para o grupo multicast;
 					DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
 					socket.send(messageOut);
 					
