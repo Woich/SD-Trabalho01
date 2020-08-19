@@ -15,6 +15,14 @@ import java.util.UUID;
 import java.io.*;
 import java.util.Random;
 
+
+/*
+ * 
+ * Autores:
+ * Lucas Shoiti (lucastakahashi@alunos.utfpr.edu.br)
+ * Pedro Henrique Woiciechovski (minewoichbr@gmail.com)
+ * 
+ * */
 public class MulticastPeer{
 	//Lista global de nós
 	public static EmissorMensagem emissorMensagem;

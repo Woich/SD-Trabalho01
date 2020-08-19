@@ -12,7 +12,13 @@ import java.util.Base64;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 
-
+/*
+ * 
+ * Autores:
+ * Lucas Shoiti (lucastakahashi@alunos.utfpr.edu.br)
+ * Pedro Henrique Woiciechovski (minewoichbr@gmail.com)
+ * 
+ * */
 public class Assinatura {
 
      private PublicKey pubKey;

@@ -1,5 +1,12 @@
 import java.security.PublicKey;
 
+/*
+ * 
+ * Autores:
+ * Lucas Shoiti (lucastakahashi@alunos.utfpr.edu.br)
+ * Pedro Henrique Woiciechovski (minewoichbr@gmail.com)
+ * 
+ * */
 public class MulticastPeerNode {
 	
 	private String ident;

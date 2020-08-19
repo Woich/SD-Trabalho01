@@ -18,7 +18,13 @@ import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 import java.lang.ClassNotFoundException;
 
-
+/*
+ * 
+ * Autores:
+ * Lucas Shoiti (lucastakahashi@alunos.utfpr.edu.br)
+ * Pedro Henrique Woiciechovski (minewoichbr@gmail.com)
+ * 
+ * */
 public class ReceptorMensagem extends Thread {
 	
 	private ControleNos controleNos;

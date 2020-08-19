@@ -18,6 +18,13 @@ import java.security.KeyFactory;
 import java.util.Scanner;
 import java.nio.charset.StandardCharsets;
 
+/*
+ * 
+ * Autores:
+ * Lucas Shoiti (lucastakahashi@alunos.utfpr.edu.br)
+ * Pedro Henrique Woiciechovski (minewoichbr@gmail.com)
+ * 
+ * */
 public class ControleNos {
 	
 	public List<MulticastPeerNode> listaNos = new ArrayList<MulticastPeerNode>();
