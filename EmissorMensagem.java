@@ -17,13 +17,12 @@ import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 import java.util.Scanner;
 import java.nio.charset.StandardCharsets;
-import java.net.DatagramSocket;
 
 public class EmissorMensagem {
 	
+	private ControleNos controleNos;
 	private String ident;
 	private int portaMulticast;
-	private int portaUnicast;
 	private MulticastSocket socket;
 	private InetAddress group;
 	private Assinatura assinatura;
@@ -31,60 +30,44 @@ public class EmissorMensagem {
 	
 	DatagramPacket messageOut;
 	
-	public EmissorMensagem(String ident, int portaMulticast, int portaUnicast,
+	public EmissorMensagem(ControleNos controleNos, String ident, int portaMulticast,
 			InetAddress group, Assinatura assinatura, PublicKey chavePublica)  throws IOException{
-		//Declara as informaï¿½ï¿½es do emissor com base as informaï¿½ï¿½es do nï¿½ a qual ele pertence
+		//Declara as informações do emissor com base as informações do nó a qual ele pertence
+		this.controleNos = controleNos;
 		this.ident = ident;
 		this.portaMulticast = portaMulticast;
-		this.portaUnicast = portaUnicast;
 		this.group = group;
 		this.assinatura = assinatura;
 		this.chavePublica = chavePublica;
 		
-		this.socket = new MulticastSocket(portaMulticast);
-		this.socket.joinGroup(group);
+		this.socket = new MulticastSocket();
+		//this.socket.joinGroup(group);
 	}
     
-	public void enviaHandskake(boolean novoNode, int portaUnicastEnvio) {
+	public void enviaHandskake(boolean novoNode) {
 		
 		try {
 			
-			String mensagem = "";
-			//Set para tipo da mensagem como 1(handshake) e a identidade do nï¿½ a qual faz parte;
-			mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";";
-			mensagem += ident + ";";
+			String mensagem = builMensagemHandshake(novoNode);
 			
-			//Set da porta unicast para caso seja necessï¿½rio enviar as informaï¿½ï¿½es de entrada;
-			mensagem += portaUnicast + ";";
+			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
+			socket.send(messageOut);
 			
-			if(novoNode) {
-				//Caso seja um novo nï¿½ entrando no grupo multicast
-				mensagem += "true;";
-			}else {
-				//Caso seja um nï¿½ que jï¿½ exista no grupo multicast;
-				mensagem += "false;";
+			byte[] buffer = new byte[1000];
+			
+			try {
+				while(true) {
+					//Fica escutando na porta unicast
+					DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);;
+					socket.setSoTimeout(1000);
+					socket.receive(messageIn);
+					parseMensagem(messageIn);
+					System.out.println("enviaHandskake - Escutei:" + new String(messageIn.getData()));
+				}
+			}catch (Exception e) {
+				System.out.println("enviaHandskake - Exception:" + e.getMessage());
 			}
 			
-			//Adiciona o chave pï¿½blica do nï¿½ para validaï¿½ï¿½o;
-			mensagem += assinatura.publicKeyToString(chavePublica);
-			
-			if(novoNode) {
-				//Gera o datagrama e envia para o grupo;
-				DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
-				socket.send(messageOut);
-			}else {
-				//Faz o envio por unicast do handshake
-				//Abre o socket
-				DatagramSocket dataSocket = new DatagramSocket();
-				//Gera o datagrama a ser enviado
-				DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, portaUnicastEnvio);
-				dataSocket.send(messageOut);
-				dataSocket.close();
-			}
-			
-		}catch (IOException e){System.out.println("enviaHandskake - IOException: " + e.getMessage());
-		}catch (NoSuchAlgorithmException e){System.out.println("enviaHandskake - NoSuchAlgorithmException: " + e.getMessage());
-		}catch (InvalidKeySpecException e){System.out.println("enviaHandskake - InvalidKeySpecException: " + e.getMessage());
 		}catch (Exception e){System.out.println("enviaHandskake - Exception: " + e.getMessage());
 		}finally {if(socket != null) socket.close();}
 		
@@ -94,17 +77,17 @@ public class EmissorMensagem {
 		
 		try {
 			
-			//Abre o socket para enviar a notï¿½cia
+			//Abre o socket para enviar a notícia
 			this.socket = new MulticastSocket(portaMulticast);
 			this.socket.joinGroup(group);
 			
 			String mensagem = "";
 			
-			//Set para tipo da mensagem como 2(notï¿½cia) e a identidade do nï¿½ a qual faz parte;
+			//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
 			mensagem = TipoMensagem.NOTICIA.getCodigo().toString()  + ";";
 			mensagem += ident + ";";
 			
-			//Obtem qual ï¿½ a notï¿½cia;
+			//Obtem qual é a notícia;
 			System.out.println("Escreva a noticia: \n");
 			Scanner leitor = new Scanner(System.in);
 			
@@ -114,10 +97,10 @@ public class EmissorMensagem {
 
 			mensagem += noticia + ";";
 			
-			//Assina a notï¿½cia;
+			//Assina a notícia;
 			
 			
-			//Gera o datagrama e envia a notï¿½cia para o grupo multicast;
+			//Gera o datagrama e envia a notícia para o grupo multicast;
 			DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
 			socket.send(messageOut);
 			
@@ -133,20 +116,20 @@ public class EmissorMensagem {
 		
 		try {
 					
-					//Abre o socket para enviar a notï¿½cia
+					//Abre o socket para enviar a notícia
 					this.socket = new MulticastSocket(portaMulticast);
 					this.socket.joinGroup(group);
 					
 					String mensagem = "";
 					
-					//Set para tipo da mensagem como 2(notï¿½cia) e a identidade do nï¿½ a qual faz parte;
+					//Set para tipo da mensagem como 2(notícia) e a identidade do nó a qual faz parte;
 					mensagem = TipoMensagem.DENUNCIA.getCodigo().toString()  + ";";
 					mensagem += ident + ";";
 					
-					//Assina a notï¿½cia;
+					//Assina a notícia;
 					mensagem += assinatura.geraAssinatura(mensagem);
 					
-					//Gera o datagrama e envia a notï¿½cia para o grupo multicast;
+					//Gera o datagrama e envia a notícia para o grupo multicast;
 					DatagramPacket messageOut = new DatagramPacket(mensagem.getBytes(), mensagem.length(), group, 6789);
 					socket.send(messageOut);
 					
@@ -158,6 +141,53 @@ public class EmissorMensagem {
 		
 	}
 	
-	public void enviaGoodbye() {}
-	
+	public String builMensagemHandshake(boolean novoNode) {
+		String mensagem = "";
+		try {
+			
+			//Set para tipo da mensagem como 1(handshake) e a identidade do nó a qual faz parte;
+			mensagem = TipoMensagem.HANDSHAKE.getCodigo().toString()  + ";";
+			mensagem += ident + ";";
+			
+			if(novoNode) {
+				//Caso seja um novo nó entrando no grupo multicast
+				mensagem += "true;";
+			}else {
+				//Caso seja um nó que já exista no grupo multicast;
+				mensagem += "false;";
+			}
+			
+			//Adiciona o chave pública do nó para validação;
+			mensagem += assinatura.publicKeyToString(chavePublica);
+			
+		}catch (NoSuchAlgorithmException e){System.out.println("enviaHandskake - NoSuchAlgorithmException: " + e.getMessage());
+		}catch (Exception e){System.out.println("enviaHandskake - Exception: " + e.getMessage());}
+		
+		return mensagem;
+	}
+
+	public void parseMensagem(DatagramPacket messageIn) {
+		
+		try {
+			String mensagem = new String(messageIn.getData());
+			
+			//Separa a mensagem em várias partes com base no separador padrão
+			String[] mensagemParts = mensagem.split(";");
+			
+			//Com a primeira parte obtem qual o tipo da mensagem enviada
+			TipoMensagem tipoMensagem = TipoMensagem.findByCodigo(Integer.parseInt(mensagemParts[0]));
+			//ID do nó
+			String identNode = mensagemParts[1];
+			
+			if(!identNode.equals(ident)) {
+				Boolean ehNovo = new Boolean(mensagemParts[2]);//Se é alguém entrando novo no grupo multicast ou alguém que já estava no grupo
+				String pubKeyString = mensagemParts[3];//Chave pública como string
+				
+				PublicKey pubKey = assinatura.stringToPublicKey(pubKeyString); //Chave pública como PublicKey
+				controleNos.addMulticastPeerNode(identNode, pubKey);//Add o novo nó na lista de nós do emissor (usado para as denuncias)
+			}
+		}catch (NoSuchAlgorithmException e){System.out.println("enviaHandskake - NoSuchAlgorithmException: " + e.getMessage());
+		}catch (Exception e){System.out.println("enviaHandskake - Exception: " + e.getMessage());}
+		
+	}
 }

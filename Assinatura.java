@@ -46,7 +46,7 @@ public class Assinatura {
             this.priKey = priKey;
       }
      public void createKeys() throws NoSuchAlgorithmException{
-            //Geraï¿½ï¿½o das chaves pï¿½blicas e privadas
+            //Geração das chaves públicas e privadas
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
             SecureRandom secRan = new SecureRandom();
             kpg.initialize(512, secRan);

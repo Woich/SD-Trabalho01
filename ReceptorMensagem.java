@@ -17,11 +17,11 @@ import java.util.Scanner;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.KeyFactory;
 import java.lang.ClassNotFoundException;
-import java.net.DatagramSocket;
 
 
 public class ReceptorMensagem extends Thread {
 	
+	private ControleNos controleNos;
 	private EmissorMensagem emissor;
 	private MulticastSocket socket;
 	private InetAddress group;
@@ -29,25 +29,25 @@ public class ReceptorMensagem extends Thread {
 	private PublicKey chavePublica;
 	private String assinat;
 	private String selfIdent;
-	private List<MulticastPeerNode> listaNos = new ArrayList<MulticastPeerNode>();
 	private List<Noticia> listaNoticias = new ArrayList<Noticia>();
 	private boolean isOuvindo;
 	private DatagramSocket datagramSocket;
-	private int portaUnicastSelf;
 	
-	public ReceptorMensagem(EmissorMensagem emissor, int portaUnicastSelf, String selfIdent,InetAddress group, int porta) throws IOException{
-		//Declara as informaï¿½ï¿½es do receptor com base as informaï¿½ï¿½es do nï¿½ a qual ele pertence
+	public ReceptorMensagem(ControleNos controleNos, EmissorMensagem emissor, String selfIdent,InetAddress group, int porta) throws IOException{
+		//Declara as informações do receptor com base as informações do nó a qual ele pertence
+		this.controleNos = controleNos;
 		this.emissor = emissor;
-		this.portaUnicastSelf = portaUnicastSelf;
-		this.socket = new MulticastSocket(porta);
 		this.assinatura = new Assinatura();
 		this.group = group;
+		
+		this.socket = new MulticastSocket(porta);
 		this.socket.joinGroup(this.group);
+		
 		this.isOuvindo = true;
-		//Identifcador do nï¿½ do qual faz parte
+		//Identifcador do nó do qual faz parte
 		this.selfIdent = selfIdent;
 		
-		//Deixa o receptor rodando sempre de forma paralela escutando, rodando a funï¿½ï¿½o run()
+		//Deixa o receptor rodando sempre de forma paralela escutando, rodando a função run()
 		this.start();
 	}
 	
@@ -58,104 +58,50 @@ public class ReceptorMensagem extends Thread {
 		try {
 			String[] mensagemParts = mensagem.split(";");
 			String messageToValidate = mensagemParts[3];
-			System.out.println(messageToValidate);
 			Signature clientSig = Signature.getInstance("DSA");
 		    clientSig.initVerify(pubKey);
-		    System.out.println("Verificou a chave");
 		    clientSig.update(messageToValidate.getBytes());
-		    System.out.println("Pegou a mensagem");
 		    
 		    if (clientSig.verify(assinatura)) {
 		    	//Mensagem corretamente assinada
-		        System.out.println("A Mensagem recebida foi assinada corretamente.");
+		        //System.out.println("A Mensagem recebida foi assinada corretamente.");
 		        assinaturaValida = true;
 		    } else {
-		    	//Mensagem nï¿½o pode ser validada
-		        System.out.println("A Mensagem recebida Nï¿½O pode ser validada.");
+		    	//Mensagem não pode ser validada
+		        //System.out.println("A Mensagem recebida não pode ser validada.");
 		        assinaturaValida = false;
 		    }
 		}catch (NoSuchAlgorithmException e) {System.out.println("validaAssiantura - NoSuchAlgorithmException: " + e.getMessage());
 		}catch (InvalidKeyException e){System.out.println("validaAssiantura - InvalidKeyException: " + e.getMessage());
 		}catch (SignatureException e){System.out.println("validaAssiantura - SignatureException: " + e.getMessage() + "\nCausa - " + e.getCause());
-		}finally {System.out.println("validaAssiantura - Validaï¿½ï¿½o Encerrada!"); return assinaturaValida;}
+		}finally {/*System.out.println("validaAssiantura - Validação Encerrada!");*/ return assinaturaValida;}
 	}
-	
-    public void addMulticastPeerNode(String ident, int portaUnicast, PublicKey chavePublica) {
-    	//Inicializa um novo nï¿½ com a chega de um handshake
-    	MulticastPeerNode multicastPeerNode = new MulticastPeerNode(ident, portaUnicast, chavePublica);
-    	//Adiciona ele na lista de nï¿½s jï¿½ existentes
-    	listaNos.add(multicastPeerNode);
-    }
-	
-    public PublicKey obterPubKeyById(String ident) {
-    	//Caso a identidade e a lista nï¿½o sejam vazias
-    	if(ident != null && !listaNos.isEmpty()) {
-    		for(MulticastPeerNode node : listaNos) {
-        		//Caso ache o nï¿½ retorna a chave pï¿½blica do mesmo;
-    			if(ident.equals(node.getIdent())) {
-    				return node.getChavePublica();
-        		}
-        	}
-    	}
-    	
-    	//Caso nï¿½o ache o nï¿½ retorna uma mensagem de erro ao achar o nï¿½;
-    	System.out.println("Nï¿½ nï¿½o encontrado!");
-    	return null;
-    }
-	
-    public void listarNos() {
-		if(!listaNos.isEmpty()) {
-		    		
-		    		for(MulticastPeerNode node : listaNos) {
-		    			
-		    			System.out.println("Nï¿½: " + node.getIdent());
-		    			System.out.println("Denuncias: " + node.getDenuncias());
-		    			System.out.println("");
-		    			
-		    		}
-		    		
-		    		System.out.println("===================================");
-		    		
-		    	}
-    }
-    
+
     public void listarNoticias() {
     	
     	if(!listaNoticias.isEmpty()) {
     		
     		for(Noticia noticia : listaNoticias) {
     			
-    			System.out.println("Notï¿½cia: " + noticia.getNoticia());
+    			System.out.println("Notícia: " + noticia.getNoticia());
     			System.out.println("Origem: " + noticia.getIdentOrigem());
     			System.out.println("");
     			System.out.println("O que deseja fazer?");
-    			System.out.println("0 - Prï¿½xima notï¿½cia");
+    			System.out.println("0 - Próxima Notícia");
     			System.out.println("1 - Denunciar");
     			
     			Scanner leitor = new Scanner(System.in);
     			int acao = leitor.nextInt();
     			
     			if(acao == 1) {
-    				disparaDenuncia(noticia.getIdentOrigem());
+    				controleNos.disparaDenuncia(noticia.getIdentOrigem());
     			}
     		}
     		
-    		System.out.println("Vocï¿½ chegou no final da lista");
+    		System.out.println("Você chegou no final da lista");
     		
     	}
     	
-    }
-    
-    public void disparaDenuncia(String ident) {
-    	if(ident != null && !listaNos.isEmpty()) {
-    		for(MulticastPeerNode node : listaNos) {
-        		//Caso ache o nï¿½ retorna a chave pï¿½blica do mesmo;
-    			if(ident.equals(node.getIdent())) {
-    				node.addDenuncia();
-    				emissor.enviaDenuncia(ident);
-        		}
-        	}
-    	}
     }
     
 	public void run() {
@@ -164,10 +110,6 @@ public class ReceptorMensagem extends Thread {
 			byte[] buffer = new byte[1000];
 			
 			while(isOuvindo) {		// get messages from others in group
-				
-				escutaUnicast();
-				
-				
 				
 				//Recebe a mensagem e transforma ela em string
 				DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
@@ -179,53 +121,56 @@ public class ReceptorMensagem extends Thread {
 				 if (!mensagem.contains(";")){
 					System.out.println("Estamos aqui " + mensagem);
 				 }
- 				System.out.println("Saiu");
- 				//Separa a mensagem em vï¿½rias partes com base no separador padrï¿½o
+				 
+				 //Separa a mensagem em várias partes com base no separador padrão
  				String[] mensagemParts = mensagem.split(";");
  				
  				//Com a primeira parte obtem qual o tipo da mensagem enviada
  				TipoMensagem tipoMensagem = TipoMensagem.findByCodigo(Integer.parseInt(mensagemParts[0]));
- 				//ID do nï¿½
+ 				//ID do nó
  				String ident = mensagemParts[1];
  				
- 				//Caso nï¿½o seja uma mensagem do prï¿½prio nï¿½
+ 				//Caso não seja uma mensagem do próprio nó
  				if(!ident.equals(selfIdent)) {
  					
  					if(tipoMensagem == TipoMensagem.HANDSHAKE) {
  	 					//Caso a mensagem seja um handshake (entrando no grupo) separa nos seguintes partes
  	 					
- 	 	 				Integer portaUnicast = new Integer(mensagemParts[2]);//Porta unicast para enviar a pï¿½prias informaï¿½ï¿½es
- 	 	 				Boolean ehNovo = new Boolean(mensagemParts[3]);//Se ï¿½ alguï¿½m entrando novo no grupo multicast ou alguï¿½m que jï¿½ estava no grupo
- 	 	 				String pubKeyString = mensagemParts[4];//Chave pï¿½blica como string
+ 	 	 				Boolean ehNovo = new Boolean(mensagemParts[2]);//Se é alguém entrando novo no grupo multicast ou alguém que já estava no grupo
+ 	 	 				String pubKeyString = mensagemParts[3];//Chave pública como string
  	 					
- 	 					PublicKey pubKey = assinatura.stringToPublicKey(pubKeyString); //Chave pï¿½blica como PublicKey
- 	 					addMulticastPeerNode(ident, portaUnicast, pubKey);//Add o novo nï¿½ na lista de nï¿½s do emissor (usado para as denuncias)
+ 	 					PublicKey pubKey = assinatura.stringToPublicKey(pubKeyString); //Chave pública como PublicKey
+ 	 					controleNos.addMulticastPeerNode(ident, pubKey);//Add o novo nó na lista de nós do emissor (usado para as denuncias)
  	 					
- 	 					if(ehNovo) {
- 	 						//Envia via unicast o handshake em caso de ser um novo nï¿½ no grupo
- 	 	 					emissor. enviaHandskake(false, portaUnicast.intValue());
+ 	 					if(ehNovo.booleanValue()) {
+ 	 						InetAddress address = messageIn.getAddress();
+ 	 						int portUni  = messageIn.getPort();
+ 	 						
+ 	 						String messageBack = emissor.builMensagemHandshake(false);
+ 	 						System.out.println("ReceptorMensagem - Mensagem:" + messageBack);
+ 	 						
+ 	 						DatagramPacket messageOut = new DatagramPacket(messageBack.getBytes(), messageBack.length(), address, portUni);
+ 	 						socket.send(messageOut);
+ 	 						
  	 					}
  	 					
  	 				}else if(tipoMensagem == TipoMensagem.NOTICIA) {
  	 					//Caso a mensagem seja uma noticia nova que chegou
 
- 	 					String noticiaString = mensagemParts[3];// A informaï¿½ï¿½o da notï¿½cia
- 	 					String assinat = mensagemParts[2];// A assinatura da notï¿½cia
+ 	 					String noticiaString = mensagemParts[3];// A informação da Notícia
+ 	 					String assinat = mensagemParts[2];// A assinatura da Notícia
  	 					
  	 					//Transforma a assinatura em bytes
  	 					byte[] assinaturaNoticia = Base64.getMimeDecoder().decode(assinat) ;
  	 					
- 	 					//Instancia a notï¿½cia
+ 	 					//Instancia a Notícia
  	 					Noticia noticia = new Noticia(ident, noticiaString, assinaturaNoticia);
- 	 					//Obtem a chave do suposto nï¿½ ao qual ela faz parte
- 	 					PublicKey pubKey = obterPubKeyById(ident);
+ 	 					//Obtem a chave do suposto nó ao qual ela faz parte
+ 	 					PublicKey pubKey = controleNos.obterPubKeyById(ident);
  	 					
- 	 					//listaNoticias.add(noticia);
- 	 					
- 	 					//Caso tenha encontrado o nï¿½
+ 	 					//Caso tenha encontrado o nó
  	 					if(pubKey != null) {
-							  //Caso a assinatura esteja correta adiciona a notï¿½cia na lista de notï¿½cias;
-							System.out.println("assinatura = " + assinaturaNoticia);
+							 //Caso a assinatura esteja correta adiciona a Notícia na lista de Notícias;
  	 						if(validaAssiantura(pubKey, mensagem, assinaturaNoticia)) {
  	 							listaNoticias.add(noticia);
  	 						}
@@ -239,26 +184,6 @@ public class ReceptorMensagem extends Thread {
 		}catch (IOException e) {System.out.println("ReceptorMensagem - IOException: " + e.getMessage());
 		}catch (InvalidKeySpecException e){System.out.println("ReceptorMensagem - InvalidKeySpecException: " + e.getMessage());
 		}finally {System.out.println("ReceptorMensagem - Receptor Fechado!");}
-	}
-	
-	public void escutaUnicast() {
-		try{
-			//Inicializa buffer do unicast
-			byte[] bufferUnicast = new byte[1000];
-			
-			//Abre conexï¿½o unicast
-			this.datagramSocket = new DatagramSocket(this.portaUnicastSelf);
-			//Recebe mensagem via unicast
-			DatagramPacket messageIn = new DatagramPacket(bufferUnicast, bufferUnicast.length);
-			datagramSocket.setSoTimeout(10000);//Add timeout de 10 s
-			datagramSocket.receive(messageIn);
-			datagramSocket.setSoTimeout(0);//Reinicia timeou
-			System.out.println("Escutei:"+messageIn.getData());
-			
-			//Fecha conexï¿½o
-			datagramSocket.close();
-		}catch (Exception e){System.out.println("escutaUnicast - Exception: " + e.getMessage());
-		}finally {System.out.println("escutaUnicast - Receptor Fechado!");}
 	}
 	
 	public void paraEscuta() {
